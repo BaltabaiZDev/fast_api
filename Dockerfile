@@ -12,9 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Қалған кодты көшіру
 COPY ./app ./app
 
-# Default порт
-ENV PORT=8080
-EXPOSE 8080
+# Render өзі PORT береді
+EXPOSE $PORT
 
-# Gunicorn арқылы қосу
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:8080", "app.main:app"]
+# Gunicorn арқылы қосу (Render PORT қолдану керек)
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:${PORT}", "app.main:app"]
