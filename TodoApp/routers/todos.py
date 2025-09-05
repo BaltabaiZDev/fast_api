@@ -3,7 +3,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, Path, Request,status
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
 import starlette.status as status
 from ..models import Todos
 from ..database import SessionLocal
@@ -44,16 +44,58 @@ def redirect_to_login():
     return redirect_response
 
 
+### Pages ###
+
 @router.get("/todo-page")
 async def todos_page(
-    request: Request,
-    db: db_dependency,
-    user: user_dependency    # <-- осылай!
+        request: Request,
+        db: db_dependency,
+        user: user_dependency  # <-- осылай!
 ):
-    if user is None:
+    try:
+        if user is None:
+            return redirect_to_login()
+        todos = db.query(Todos).filter(Todos.owner_id == user.get("id")).all()
+        return templates.TemplateResponse("todo.html", {"request": request, "todos": todos, "user": user})
+    except:
         return redirect_to_login()
-    todos = db.query(Todos).filter(Todos.owner_id == user.get("id")).all()
-    return templates.TemplateResponse("todo.html", {"request": request, "todos": todos, "user": user})
+
+
+@router.get('/add-todo-page')
+async def render_todo_page(
+        request: Request,
+        user: user_dependency
+):
+    try:
+        if user is None:
+            return redirect_to_login()
+        return templates.TemplateResponse("add-todo.html", {
+            "request": request,
+            "user": user
+        })
+    except Exception:
+        return redirect_to_login()
+
+
+@router.get('/edit-todo-page/{todo_id}')
+async def render_edit_todos_page(
+        request: Request,
+        todo_id: int,
+        db: db_dependency,
+        user: user_dependency
+):
+    try:
+        if user is None:
+            return redirect_to_login()
+
+        # Тек өзінің Todo-сын ғана алуға болады!
+        todo = db.query(Todos).filter(Todos.id == todo_id, Todos.owner_id == user.get("id")).first()
+        if todo is None:
+            # Басқа қолданушының Todo-сы немесе ондай жоқ болса — өз тізіміне қайтарады
+            return RedirectResponse(url="/todos/todo-page", status_code=302)
+        return templates.TemplateResponse("edit-todo.html", {"request": request, "todo": todo, "user": user})
+    except Exception:
+        return redirect_to_login()
 
 
 ### Endpoints ###
