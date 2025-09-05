@@ -16,4 +16,4 @@ COPY ./app ./app
 EXPOSE $PORT
 
 # Gunicorn арқылы қосу (Render PORT қолдану керек)
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:${PORT}", "app.main:app"]
+CMD gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:$PORT app.main:app
