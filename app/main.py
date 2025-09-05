@@ -15,6 +15,10 @@ app.add_middleware(
 def health():
     return {"ok": True}
 
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
 @app.post("/solve", response_model=SolveOutput)
 def solve_endpoint(body: SolveInput):
     return solve(body)
